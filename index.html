@@ -19,7 +19,7 @@
         return cArray
     }
 
-    function getUint8CArray(instance, jsArray) {
+    function getUint32CArray(instance, jsArray) {
         const cArrayPointer = instance.exports.malloc(jsArray.length * 4);
             // Turn that sequence of 32-bit integers
             // into a Uint32Array, starting at that address.
