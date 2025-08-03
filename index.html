@@ -36,7 +36,7 @@
     
     async function init() {
     const { instance } = await WebAssembly.instantiate(
-      await (await fetch("./native.wasm")).arrayBuffer()
+      await (await fetch("./wasm/compiled.wasm")).arrayBuffer()
     );
 
     const icorrectMask = getUint32CArray(instance, [0, 0, 0, 0, 0])
