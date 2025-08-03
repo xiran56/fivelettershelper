@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+
+<script type="module">
+  const UNKNOWN = 32
+  const WORD_LEN = 5
+
+    function get_c_array(instance, jsArray) {
+        const cArrayPointer = instance.exports.malloc(jsArray.length);
+            // Turn that sequence of 32-bit integers
+            // into a Uint32Array, starting at that address.
+        const cArray = new Uint8Array(
+            instance.exports.memory.buffer,
+            cArrayPointer,
+            jsArray.length
+        );
+        // Copy the values from JS to C.
+        cArray.set(jsArray);
+
+        return cArray
+    }
+    
+    async function init() {
+    const { instance } = await WebAssembly.instantiate(
+      await (await fetch("./native.wasm")).arrayBuffer()
+    );
+
+    const icorrectMask = get_c_array(instance, [UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN])
+    const correctMask = get_c_array(instance, [UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN])
+    const missingLetters = 0
+
+    instance.exports.calculate_word(missingLetters, correctMask.byteOffset, icorrectMask.byteOffset)
+
+    let answer = get_c_array(instance, [UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN])
+
+    instance.exports.get_word(answer.byteOffset)
+
+    // Run the function, passing the starting address and length.
+    console.log(answer);
+  }
+  init();
+</script>
