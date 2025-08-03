@@ -4,11 +4,26 @@
   const UNKNOWN = 32
   const WORD_LEN = 5
 
-    function get_c_array(instance, jsArray) {
+    function getUint8CArray(instance, jsArray) {
         const cArrayPointer = instance.exports.malloc(jsArray.length);
+            // Turn that sequence of 8-bit integers
+            // into a Uint8Array, starting at that address.
+        const cArray = new Uint8Array(
+            instance.exports.memory.buffer,
+            cArrayPointer,
+            jsArray.length
+        );
+        // Copy the values from JS to C.
+        cArray.set(jsArray);
+
+        return cArray
+    }
+
+    function getUint8CArray(instance, jsArray) {
+        const cArrayPointer = instance.exports.malloc(jsArray.length * 4);
             // Turn that sequence of 32-bit integers
             // into a Uint32Array, starting at that address.
-        const cArray = new Uint8Array(
+        const cArray = new Uint32Array(
             instance.exports.memory.buffer,
             cArrayPointer,
             jsArray.length
@@ -24,13 +39,13 @@
       await (await fetch("./native.wasm")).arrayBuffer()
     );
 
-    const icorrectMask = get_c_array(instance, [UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN])
-    const correctMask = get_c_array(instance, [UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN])
+    const icorrectMask = getUint32CArray(instance, [0, 0, 0, 0, 0])
+    const correctMask = getUint8CArray(instance, [UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN])
     const missingLetters = 0
 
     instance.exports.calculate_word(missingLetters, correctMask.byteOffset, icorrectMask.byteOffset)
 
-    let answer = get_c_array(instance, [UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN])
+    let answer = getUint8CArray(instance, [UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN])
 
     instance.exports.get_word(answer.byteOffset)
 
