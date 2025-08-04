@@ -257,144 +257,144 @@
         (async function() {
             const { wasmModuleInstance } = await WebAssembly.instantiate(await (await fetch("./wasm/compiled.wasm")).arrayBuffer());
 
-            document.addEventListener('DOMContentLoaded', () => {
-                const wordsContainer = document.getElementById('wordsContainer');
-                const getOptimalWord = document.getElementById('getOptimalWord');
+            while (document.readyState === 'loading') {}
+
+            const wordsContainer = document.getElementById('wordsContainer');
+            const getOptimalWord = document.getElementById('getOptimalWord');
+            
+            // Initial words in uppercase
+            const initialWords = ['МЕТОД', 'СПЛИН', 'КУРВА'];
+            
+            // Create a new word row
+            function createWordRow(word) {
+                const row = document.createElement('div');
+                row.className = 'word-row';
                 
-                // Initial words in uppercase
-                const initialWords = ['МЕТОД', 'СПЛИН', 'КУРВА'];
-                
-                // Create a new word row
-                function createWordRow(word) {
-                    const row = document.createElement('div');
-                    row.className = 'word-row';
+                // Create letter boxes
+                for (let i = 0; i < 5; i++) {
+                    const box = document.createElement('div');
+                    box.className = 'letter-box missing'; // Start with missing
+                    box.textContent = word[i];
+                    box.dataset.statusIndex = MISSING;
                     
-                    // Create letter boxes
-                    for (let i = 0; i < 5; i++) {
-                        const box = document.createElement('div');
-                        box.className = 'letter-box missing'; // Start with missing
-                        box.textContent = word[i];
-                        box.dataset.statusIndex = MISSING;
-                        
-                        box.addEventListener('click', () => {
-                            cycleStatus(box);
-                        });
-                        
-                        row.appendChild(box);
-                    }
-                    
-                    // Add word label
-                    const label = document.createElement('div');
-                    label.className = 'word-label';
-                    label.textContent = word;
-                    row.appendChild(label);
-                    
-                    return row;
-                }
-                
-                // Cycle through statuses (missing → correctly_placed → icorrectly_placed → missing)
-                function cycleStatus(box) {
-                    // Update status
-                    box.dataset.statusIndex = (box.dataset.statusIndex + 1) % STATUSES.length;
-                    
-                    console.log("box status changed")
-
-                    // Update appearance
-                    box.classList.remove('missing', 'correctly_placed', 'icorrectly_placed');
-                    box.classList.add(STATUSES[box.dataset.statusIndex]);
-                }
-                
-                const UNKNOWN_LETTER = 32;
-                const RUS_ABC = "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
-
-                function bit_set(num, bit) {
-                    return num | 1<<bit;
-                }
-
-
-                function generateInfo() {
-                    const wordRows = wordsContainer.querySelectorAll('.word-row');
-                   
-                    var result = { missing: 0, icorrectMask: [0, 0, 0, 0, 0], correctMask: [UNKNOWN_LETTER, UNKNOWN_LETTER, UNKNOWN_LETTER, UNKNOWN_LETTER, UNKNOWN_LETTER]  };
-
-
-                    wordRows.forEach(row => {
-                        const boxes = row.querySelectorAll('.letter-box');
-
-                        for (var i = 0; i < boxes.length; i++) {
-                            const letterIndex = RUS_ABC.indexOf(boxes[i].textContent)
-                            const statusIndex = +(boxes[i].dataset.statusIndex) 
-
-                            switch (statusIndex) {
-                                case MISSING:
-                                    console.log("missing box")
-                                    result.missing = bit_set(result.missing, letterIndex);
-                                    break;
-                                case CORRECTLY_PLACED:
-                                    console.log("CORRECTLY_PLACED box")
-                                    result.correctMask[i] = letterIndex;
-                                    break;
-                                case ICORRECTLY_PLACED:
-                                    console.log("ICORRECTLY_PLACED box")
-                                    result.icorrectMask[i] = bit_set(result.icorrectMask[i], letterIndex);
-                            }
-                        }
+                    box.addEventListener('click', () => {
+                        cycleStatus(box);
                     });
                     
-                    return result;
+                    row.appendChild(box);
                 }
+                
+                // Add word label
+                const label = document.createElement('div');
+                label.className = 'word-label';
+                label.textContent = word;
+                row.appendChild(label);
+                
+                return row;
+            }
+            
+            // Cycle through statuses (missing → correctly_placed → icorrectly_placed → missing)
+            function cycleStatus(box) {
+                // Update status
+                box.dataset.statusIndex = (box.dataset.statusIndex + 1) % STATUSES.length;
+                
+                console.log("box status changed")
 
-                const UNKNOWN = 32
-                const WORD_LEN = 5
+                // Update appearance
+                box.classList.remove('missing', 'correctly_placed', 'icorrectly_placed');
+                box.classList.add(STATUSES[box.dataset.statusIndex]);
+            }
+            
+            const UNKNOWN_LETTER = 32;
+            const RUS_ABC = "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
 
-                function getUint8CArray(instance, jsArray) {
-                    const cArrayPointer = instance.exports.malloc(jsArray.length);
-                        // Turn that sequence of 8-bit integers
-                        // into a Uint8Array, starting at that address.
-                    const cArray = new Uint8Array(
-                        instance.exports.memory.buffer,
-                        cArrayPointer,
-                        jsArray.length
-                    );
-                    // Copy the values from JS to C.
-                    cArray.set(jsArray);
+            function bit_set(num, bit) {
+                return num | 1<<bit;
+            }
 
-                    return cArrayPointer
-                }
 
-                function getUint32CArray(instance, jsArray) {
-                    const cArrayPointer = instance.exports.malloc(jsArray.length * 4);
-                        // Turn that sequence of 32-bit integers
-                        // into a Uint32Array, starting at that address.
-                    const cArray = new Uint32Array(
-                        instance.exports.memory.buffer,
-                        cArrayPointer,
-                        jsArray.length
-                    );
-                    // Copy the values from JS to C.
-                    cArray.set(jsArray);
+            function generateInfo() {
+                const wordRows = wordsContainer.querySelectorAll('.word-row');
+               
+                var result = { missing: 0, icorrectMask: [0, 0, 0, 0, 0], correctMask: [UNKNOWN_LETTER, UNKNOWN_LETTER, UNKNOWN_LETTER, UNKNOWN_LETTER, UNKNOWN_LETTER]  };
 
-                    return cArrayPointer
+
+                wordRows.forEach(row => {
+                    const boxes = row.querySelectorAll('.letter-box');
+
+                    for (var i = 0; i < boxes.length; i++) {
+                        const letterIndex = RUS_ABC.indexOf(boxes[i].textContent)
+                        const statusIndex = +(boxes[i].dataset.statusIndex) 
+
+                        switch (statusIndex) {
+                            case MISSING:
+                                console.log("missing box")
+                                result.missing = bit_set(result.missing, letterIndex);
+                                break;
+                            case CORRECTLY_PLACED:
+                                console.log("CORRECTLY_PLACED box")
+                                result.correctMask[i] = letterIndex;
+                                break;
+                            case ICORRECTLY_PLACED:
+                                console.log("ICORRECTLY_PLACED box")
+                                result.icorrectMask[i] = bit_set(result.icorrectMask[i], letterIndex);
+                        }
                     }
-
-                initialWords.forEach(word => {
-                    const row = createWordRow(word);
-                    wordsContainer.appendChild(row);
                 });
-         
-                // Button event listeners
-                getOptimalWord.addEventListener('click', () => {
-                    const info = generateInfo();
-                    console.log(info);
+                
+                return result;
+            }
 
-                    wasmModuleInstance.exports.calculate_word(info.missing, getUint8CArray(wasmModuleInstance, info.correctMask), getUint32CArray(wasmModuleInstance, info.icorrectMask))
-        
-                    const answer = [UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN]
+            const UNKNOWN = 32
+            const WORD_LEN = 5
 
-                    wasmModuleInstance.exports.get_word(getUint8CArray(wasmModuleInstance, answer))
+            function getUint8CArray(instance, jsArray) {
+                const cArrayPointer = instance.exports.malloc(jsArray.length);
+                    // Turn that sequence of 8-bit integers
+                    // into a Uint8Array, starting at that address.
+                const cArray = new Uint8Array(
+                    instance.exports.memory.buffer,
+                    cArrayPointer,
+                    jsArray.length
+                );
+                // Copy the values from JS to C.
+                cArray.set(jsArray);
 
-                    console.log(answer)
-                });
+                return cArrayPointer
+            }
+
+            function getUint32CArray(instance, jsArray) {
+                const cArrayPointer = instance.exports.malloc(jsArray.length * 4);
+                    // Turn that sequence of 32-bit integers
+                    // into a Uint32Array, starting at that address.
+                const cArray = new Uint32Array(
+                    instance.exports.memory.buffer,
+                    cArrayPointer,
+                    jsArray.length
+                );
+                // Copy the values from JS to C.
+                cArray.set(jsArray);
+
+                return cArrayPointer
+                }
+
+            initialWords.forEach(word => {
+                const row = createWordRow(word);
+                wordsContainer.appendChild(row);
+            });
+     
+            // Button event listeners
+            getOptimalWord.addEventListener('click', () => {
+                const info = generateInfo();
+                console.log(info);
+
+                wasmModuleInstance.exports.calculate_word(info.missing, getUint8CArray(wasmModuleInstance, info.correctMask), getUint32CArray(wasmModuleInstance, info.icorrectMask))
+    
+                const answer = [UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN]
+
+                wasmModuleInstance.exports.get_word(getUint8CArray(wasmModuleInstance, answer))
+
+                console.log(answer)
             });
         })();
     </script>
