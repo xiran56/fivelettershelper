@@ -381,7 +381,8 @@
             var wasmModuleInstance = null
 
             (async function() {
-                {wasmModuleInstance} = await WebAssembly.instantiate(await (await fetch("./wasm/compiled.wasm")).arrayBuffer());
+                const {inst} = await WebAssembly.instantiate(await (await fetch("./wasm/compiled.wasm")).arrayBuffer());
+                wasmModuleInstance = inst
             })()
 
             // Button event listeners
