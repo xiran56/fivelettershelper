@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+
+<script type="module">
+  const UNKNOWN = 32
+  const WORD_LEN = 5
+
+    function getUint8CArray(instance, jsArray) {
+        const cArrayPointer = instance.exports.malloc(jsArray.length);
+            // Turn that sequence of 8-bit integers
+            // into a Uint8Array, starting at that address.
+        const cArray = new Uint8Array(
+            instance.exports.memory.buffer,
+            cArrayPointer,
+            jsArray.length
+        );
+        // Copy the values from JS to C.
+        cArray.set(jsArray);
+
+        return cArray
+    }
+
+    function getUint32CArray(instance, jsArray) {
+        const cArrayPointer = instance.exports.malloc(jsArray.length * 4);
+            // Turn that sequence of 32-bit integers
+            // into a Uint32Array, starting at that address.
+        const cArray = new Uint32Array(
+            instance.exports.memory.buffer,
+            cArrayPointer,
+            jsArray.length
+        );
+        // Copy the values from JS to C.
+        cArray.set(jsArray);
+
+        return cArray
+    }
+    
+    async function init() {
+    const { instance } = await WebAssembly.instantiate(
+      await (await fetch("./wasm/compiled.wasm")).arrayBuffer()
+    );
+
+    const icorrectMask = getUint32CArray(instance, [
+  1024,
+  0,
+  0,
+  0,
+  0
+]);
+    const correctMask = getUint8CArray(instance, [
+  32,
+  19,
+  18,
+  32,
+  0
+]);
+    const missingLetters = 260404;
+
+    instance.exports.calculate_word(missingLetters, correctMask.byteOffset, icorrectMask.byteOffset)
+
+    let answer = getUint8CArray(instance, [UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN])
+
+    instance.exports.get_word(answer.byteOffset)
+
+    // Run the function, passing the starting address and length.
+    console.log(answer);
+  }
+  init();
+</script>
