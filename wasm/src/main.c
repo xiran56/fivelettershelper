@@ -10,10 +10,11 @@
 typedef uint8_t mask_t[WORD_LEN];
 typedef uint32_t icorrect_mask_t[WORD_LEN];
 
+uint16_t dict_search_start_index = 0;
 uint16_t chosen_word_index = UNCHOSEN_WORD_INDEX;
 
 void calculate_word(int missing_letters, mask_t correct, icorrect_mask_t icorrect) {
-    for (uint16_t word_index = 0; word_index < WORDS_COUNT; word_index++) {
+    for (uint16_t word_index = dict_search_start_index; word_index < WORDS_COUNT; word_index++) {
         for (uint8_t letter_index = 0; letter_index < WORD_LEN; letter_index++) {
             if (NTH_BIT(missing_letters, words[word_index][letter_index]))
                 goto skip;
@@ -26,15 +27,17 @@ void calculate_word(int missing_letters, mask_t correct, icorrect_mask_t icorrec
         }
             
         chosen_word_index = word_index;
+        dict_search_start_index = chosen_word_index + 1;
         return;
-skip:;
     }
+skip:;
+     chosen_word_index = UNCHOSEN_WORD_INDEX;
 } 
 
 void get_word(uint8_t *buf) {
-    if (chosen_word_index != UNCHOSEN_WORD_INDEX)
+    if (chosen_word_index != UNCHOSEN_WORD_INDEX) 
         for (uint8_t i = 0; i < WORD_LEN; i++)
-                buf[i] = words[chosen_word_index][i];
+            buf[i] = words[chosen_word_index][i];
 
     // javascript side sets the answer to [UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN], so no need to fill if there isn't a chosen word
 }

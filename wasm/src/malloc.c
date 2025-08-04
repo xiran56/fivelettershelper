@@ -7,3 +7,7 @@ void* malloc(int n) {
   bump_pointer += n;
   return (void *)r;
 }
+
+void clear() {
+    bump_pointer = (unsigned int)(&__heap_base);
+}
