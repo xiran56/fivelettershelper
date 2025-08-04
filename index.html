@@ -39,9 +39,21 @@
       await (await fetch("./wasm/compiled.wasm")).arrayBuffer()
     );
 
-    const icorrectMask = getUint32CArray(instance, [0, 0, 0, 0, 0])
-    const correctMask = getUint8CArray(instance, [UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN])
-    const missingLetters = 0
+    const icorrectMask = getUint32CArray(instance, [
+  1024,
+  0,
+  0,
+  0,
+  0
+]);
+    const correctMask = getUint8CArray(instance, [
+  32,
+  19,
+  18,
+  32,
+  0
+]);
+    const missingLetters = 260404;
 
     instance.exports.calculate_word(missingLetters, correctMask.byteOffset, icorrectMask.byteOffset)
 
