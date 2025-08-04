@@ -253,11 +253,7 @@
         const CORRECTLY_PLACED = 2
         const STATUSES = ['missing', 'icorrectly_placed', 'correctly_placed'];
 
-        (async function() {
-            const { wasmModuleInstance } = await WebAssembly.instantiate(await (await fetch("./wasm/compiled.wasm")).arrayBuffer());
-
-            while (document.readyState === 'loading') {}
-
+         document.addEventListener('DOMContentLoaded', () => {
             const wordsContainer = document.getElementById('wordsContainer');
             const getOptimalWord = document.getElementById('getOptimalWord');
             
@@ -382,10 +378,27 @@
                 wordsContainer.appendChild(row);
             });
      
+            var wasmModuleInstance = null
+
+            function getWasmModule() {
+                if (wasmModuleInstance !== null) {
+                    return wasmModuleInstance
+                }
+
+                fetch("./wasm/compiled.wasm")
+                    .then((response) => response.arrayBuffer())
+                    .then((bytes) => WebAssembly.instantiate(bytes, importObject))
+                    .then((instance) => wasmModuleInstance = instance)
+
+                return wasmModuleInstance
+            }
+
             // Button event listeners
             getOptimalWord.addEventListener('click', () => {
                 const info = generateInfo();
                 console.log(info);
+
+                wasmModuleInstance = getWasmModule()
 
                 wasmModuleInstance.exports.calculate_word(info.missing, getUint8CArray(wasmModuleInstance, info.correctMask), getUint32CArray(wasmModuleInstance, info.icorrectMask))
     
@@ -395,7 +408,7 @@
 
                 console.log(answer)
             });
-        })();
+        })
     </script>
 </body>
 </html>
