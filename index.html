@@ -253,6 +253,14 @@
         const CORRECTLY_PLACED = 2
         const STATUSES = ['missing', 'icorrectly_placed', 'correctly_placed'];
 
+        var wasmModuleInstance = null;
+
+        (async function() {
+            const {inst} = await WebAssembly.instantiate(await (await fetch("./wasm/compiled.wasm")).arrayBuffer());
+            wasmModuleInstance = inst
+        })();
+
+
         document.addEventListener('DOMContentLoaded', () => {
             const wordsContainer = document.getElementById('wordsContainer');
             const getOptimalWord = document.getElementById('getOptimalWord');
@@ -378,13 +386,6 @@
                 wordsContainer.appendChild(row);
             });
      
-            var wasmModuleInstance = null
-
-            (async function() {
-                const {inst} = await WebAssembly.instantiate(await (await fetch("./wasm/compiled.wasm")).arrayBuffer());
-                wasmModuleInstance = inst
-            })()
-
             // Button event listeners
             getOptimalWord.addEventListener('click', () => {
                 const info = generateInfo();
