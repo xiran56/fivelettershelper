@@ -253,9 +253,8 @@
         const CORRECTLY_PLACED = 2
         const STATUSES = ['missing', 'icorrectly_placed', 'correctly_placed'];
 
-
         (async function() {
-            const { wasmModuleInstance } = await WebAssembly.instantiate(await (await fetch("./wasm/compiled.wasm")).arrayBuffer());
+            const { wasmModuleInstance } = await WebAssembly.instantiate(await (await fetch("./wasm/compiled.wasm").arrayBuffer()));
 
             while (document.readyState === 'loading') {}
 
