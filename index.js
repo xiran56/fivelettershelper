@@ -101,7 +101,7 @@ async function getWasmModule() {
     if (window.wasmModuleInstance !== undefined)
         return window.wasmModuleInstance;
 
-    const response = await fetch('/compiled.wasm');
+    const response = await fetch('/fivelettershelper/compiled.wasm');
     const arrayBuffer = await response.arrayBuffer();
 
     var result = await WebAssembly.instantiate(arrayBuffer)
