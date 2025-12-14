@@ -1,6 +1,7 @@
 #include "words.h"
 
 #define NTH_BIT(num, bit) ((num >> bit) & 1)
+#define CLEAR_BIT(reg, pos) (reg &= ~(1u << pos))
 
 #define UNKNOWN_LETTER 32
 #define UNCHOSEN_WORD_INDEX WORDS_COUNT
@@ -14,6 +15,8 @@ uint16_t dict_search_start_index = 0;
 uint16_t chosen_word_index = UNCHOSEN_WORD_INDEX;
 
 void calculate_word(int missing_letters, mask_t correct, icorrect_mask_t icorrect) {
+    uint32_t required_letters = icorrect[0] | icorrect[1] | icorrect[2] | icorrect[3] | icorrect[4];
+
     for (uint16_t word_index = dict_search_start_index; word_index < WORDS_COUNT; word_index++) {
         for (uint8_t letter_index = 0; letter_index < WORD_LEN; letter_index++) {
             if (NTH_BIT(missing_letters, words[word_index][letter_index]))
@@ -24,11 +27,15 @@ void calculate_word(int missing_letters, mask_t correct, icorrect_mask_t icorrec
 
             if (NTH_BIT(icorrect[letter_index], words[word_index][letter_index]))
                 goto skip;
+        
+            CLEAR_BIT(required_letters, words[word_index][letter_index]);   
         }
-            
-        chosen_word_index = word_index;
-        dict_search_start_index = chosen_word_index + 1;
-        return;
+
+        if (!required_letters) {
+            chosen_word_index = word_index;
+            dict_search_start_index = chosen_word_index + 1;
+            return;
+        }
     }
 skip:;
      chosen_word_index = UNCHOSEN_WORD_INDEX;
